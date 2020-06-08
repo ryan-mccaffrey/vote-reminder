@@ -6,22 +6,32 @@ from twilio.rest import Client
 from dotenv import load_dotenv
 from datetime import datetime
 from collections import defaultdict
+import phonenumbers
+import pickle
 import logging
 import os
 
 class TextManager:
     def __init__(self, now, is_test=False):
         load_dotenv()
-        account_sid = os.getenv('TWILIO_ACCOUNT_SID')
-        auth_token = os.getenv('TWILIO_AUTH_TOKEN')
-        self.from_number = os.getenv('TWILIO_FROM_NUMBER')
+
+        if is_test:
+            account_sid = os.getenv('TWILIO_TEST_ACCOUNT_SID')
+            auth_token = os.getenv('TWILIO_TEST_AUTH_TOKEN')
+            self.from_number = os.getenv('TWILIO_TEST_FROM_NUMBER')
+        else:
+            account_sid = os.getenv('TWILIO_ACCOUNT_SID')
+            auth_token = os.getenv('TWILIO_AUTH_TOKEN')
+            self.from_number = os.getenv('TWILIO_FROM_NUMBER')
+
         self.client = Client(username=account_sid, password=auth_token)
         self.is_test = is_test
 
         # send initializing text to myself
-        self.admin_numbers = [os.getenv('RYAN_PHONE_NUMBER')]
+        admin_num = phonenumbers.parse(os.getenv('RYAN_PHONE_NUMBER'), 'US')
+        self.admin_numbers = [admin_num]
         msg = 'Vote reminder cron: starting run at {}'.format(now)
-        self.send_text(os.getenv('RYAN_PHONE_NUMBER'), msg)
+        self.send_text(admin_num, msg)
         logging.info('Initialized text manager, admin_numbers: {}'.format(self.admin_numbers))
 
     def send_all_event_texts(self, now, users, events):
@@ -82,16 +92,15 @@ class TextManager:
 
         return receipt_map
 
-    # TODO: catch errors
     def send_text(self, to_num, msg_body):
-        if self.is_test:
-            print('Would have sent text to {}: {}'.format(to_num, msg_body))
-            return
-
-        message = self.client.messages.create(to=to_num, 
-            from_=self.from_number, body=msg_body)
-        # print(message.sid)
-
+        to_str = phonenumbers.format_number(to_num, phonenumbers.PhoneNumberFormat.E164)
+        try:
+            message = self.client.messages.create(to=to_str, 
+                from_=self.from_number, body=msg_body)
+            logging.info('sent text to {}: {}'.format(to_str, message.sid))
+        except Exception as e:
+            print('Could not send text to {}: {}'.format(to_str, e))
+            logging.warning('Could not send text to {}: {}'.format(to_str, e))
 
 def main():
     run_time = datetime.now()

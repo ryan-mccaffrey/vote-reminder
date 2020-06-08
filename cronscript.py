@@ -15,7 +15,7 @@ def main():
     users = get_form_responses()
 
     election_infos = parse_elections_csv()
-    events = get_all_election_events(election_infos, runtime)
+    events = get_all_election_events(election_infos, run_time)
     texter.send_all_event_texts(run_time, users, events)
 
 def end_to_end_test():
@@ -34,5 +34,5 @@ def end_to_end_test():
     texter.send_all_event_texts(runtime, users, events)
 
 if __name__ == '__main__':
-    # main()
-    end_to_end_test()
+    main()
+    # end_to_end_test()
