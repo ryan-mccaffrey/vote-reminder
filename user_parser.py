@@ -74,15 +74,22 @@ def get_form_responses():
         time, name, phone, state = submission[FORM_TIME_IDX], submission[FORM_NAME_IDX], submission[FORM_PHONE_IDX], submission[FORM_STATE_IDX]
         user = FormSubmission(time, name, phone, state)
 
+        if not phonenumbers.is_valid_number(user.phone_num):
+            print('user {} has invalid phone number {}'.format(user.name, user.phone_num))
+            # TODO: log this
+            continue
+
         # res is stored in time submitted order, so we just keep the first submission.
         # dedup by phone number
-        if user.phone_num in unique_users:
-            unique_users[user.phone_num].num_submissions += 1
+        phone_str = phonenumbers.format_number(user.phone_num, phonenumbers.PhoneNumberFormat.E164)
+        if phone_str in unique_users:
+            unique_users[phone_str].num_submissions += 1
         else:
-            unique_users[user.phone_num] = user
+            unique_users[phone_str] = user
 
     return unique_users.values()
 
 
 if __name__ == '__main__':
     get_form_responses()
+    # get_google_creds()

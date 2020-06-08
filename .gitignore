@@ -140,3 +140,4 @@ cython_debug/
 # Customs
 .DS_Store
 google_token.pickle
+credentials.json
