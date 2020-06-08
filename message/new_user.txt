@@ -1,0 +1,18 @@
+Hey there{% if name %}, {{ name }}{% endif %}! 
+
+Thanks for signing up for reminders to vote in the 2020 elections! You’ll receive state specific information in the coming months about voter registration and elections.
+
+You have signed up to receive reminders for {{ state }}.
+Primary Election Day: {{ primary_date }}
+General Election Registration Deadline: {{ general_deadline }}
+General Election Day: November 03, 2020
+
+Will you need an absentee ballot for the 2020 general election? Find more information on how to obtain an absentee ballot for {{ state }} here: {{ absentee_site }}
+{% if register_day_of %}
+Great news! Your state is the only state to not require voter registration ahead of time. Please make sure you bring one of the following forms of identification to the voting booth: Valid driver's license, Valid non-driver's identification card, tribal government issued identification, and Long term care identification certificate along with proof of residency.
+{% elif register_online_flag %}
+{{ state }} offers online voter registration. We will send reminders as the registration deadline approaches, but if you have a free moment now, why not use it to register for the 2020 general election? Use the following link to register to vote in {{ state }} online: {{ registration_site }}
+{% else %}
+Unfortunately, {{ state }} does not offer online voter registration. Your voter registration reminder will be sent 1 week ahead of the voter registration deadline. Have a free moment now? Use the following link to find instructions on how to register to vote in {{ state }}: {{ registration_site }}
+{% endif %}
+Hope to see you at the voting booths!

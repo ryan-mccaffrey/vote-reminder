@@ -1,0 +1,1 @@
+Hey there{% if name %}, {{ name }}{% endif %}! {% if warning_time == 'today' %}TODAY IS THE DAY! Make sure to get out to the voting booths and cast your vote!{% elif warning_time == 'day' %}Friendly reminder that election day is TOMORROW! If needed, you can look up your local polling place at https://www.vote.org/polling-place-locator/{% endif %}

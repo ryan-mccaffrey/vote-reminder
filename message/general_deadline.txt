@@ -1,0 +1,4 @@
+Hey there{% if name %}, {{ name }}{% endif %}! This is a reminder that the 2020 general election voter registration deadline in {{ state }} is {% if warning_time == 'day' %}TOMORROW!{% else %}1 week away.{% endif %} Make sure you register to vote {% if warning_time == 'week' %}by {{ general_deadline }}{% endif %} so that you can participate in the general election on November 3rd, 2020.
+{% if register_online_flag %}
+Follow this link to register to vote: {{ registration_site }}{% else %}
+Please note that {{ state }} does not have a system in place for online voter registration. Please refer to the instructions in the following link to register to vote in 2020: {{ registration_site }}{% endif %}

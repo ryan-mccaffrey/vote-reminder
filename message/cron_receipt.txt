@@ -1,0 +1,6 @@
+Cron job completed in {{ runtime }}. Stats:
+
+Number of new user texts: {{ new_user_texts }}
+Events generated:{% for key, value in event_text_dict.items() %}
+{{ key }}: {{ value }} texts sent{% else %} No events today
+{% endfor %}

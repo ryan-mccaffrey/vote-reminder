@@ -1,0 +1,88 @@
+import phonenumbers
+from datetime import datetime
+import os
+import pickle
+from googleapiclient.discovery import build
+from google_auth_oauthlib.flow import InstalledAppFlow
+from google.auth.transport.requests import Request
+
+# Form response columns
+FORM_TIME_IDX = 0
+FORM_NAME_IDX = 1
+FORM_PHONE_IDX = 2
+FORM_STATE_IDX = 3
+
+# If modifying these scopes, delete the file token.pickle.
+SCOPES = ['https://www.googleapis.com/auth/spreadsheets.readonly']
+
+# The ID and range of a sample spreadsheet.
+FORM_RESPONSE_SHEET_ID = '1ve9JZdtaxLmJD797reJG02G65loeeHsUuX7thMBZmXA'
+FORM_RESPONSE_RANGE = 'Form_Responses!A2:E'
+
+class FormSubmission:
+    def __init__(self, timestamp, name, phone_str, state):
+        self.submit_time = datetime.strptime(timestamp, '%m/%d/%Y %H:%M:%S')
+        self.name = name
+        self.phone_num = phonenumbers.parse(phone_str, 'US')
+        self.state_code = state
+        self.num_submissions = 1
+
+def get_test_user():
+    return FormSubmission('6/6/2020 21:29:28', 'Ryan', '631-707-5422', 'CA')
+
+
+def get_google_creds():
+    creds = None
+    # Check first if access and refresh tokens already exist
+    if os.path.exists('google_token.pickle'):
+        with open('google_token.pickle', 'rb') as token:
+            creds = pickle.load(token)
+    
+    # If there are no (valid) credentials available, let the user log in.
+    if not creds or not creds.valid:
+        if creds and creds.expired and creds.refresh_token:
+            creds.refresh(Request())
+        else:
+            # TODO: need a login message
+            flow = InstalledAppFlow.from_client_secrets_file(
+                'credentials.json', SCOPES)
+            creds = flow.run_local_server(port=0)
+        # Save the credentials for the next run
+        with open('google_token.pickle', 'wb') as token:
+            pickle.dump(creds, token)
+    return creds
+
+def get_form_responses():
+    # The file token.pickle stores the user's access and refresh tokens, and is
+    # created automatically when the authorization flow completes for the first
+    # time.
+    creds = get_google_creds()
+    assert creds and creds.valid
+    service = build('sheets', 'v4', credentials=creds)
+
+    # Call the Sheets API
+    sheet = service.spreadsheets()
+    result = sheet.values().get(spreadsheetId=FORM_RESPONSE_SHEET_ID,
+                                range=FORM_RESPONSE_RANGE).execute()
+
+    unique_users = {}
+    res = result.get('values', [])
+    for submission in res: 
+        if len(submission) == 0:
+            continue
+
+        time, name, phone, state = submission[FORM_TIME_IDX], submission[FORM_NAME_IDX], submission[FORM_PHONE_IDX], submission[FORM_STATE_IDX]
+        user = FormSubmission(time, name, phone, state)
+
+        # res is stored in time submitted order, so we just keep the first submission.
+        # dedup by phone number
+        if user.phone_num in unique_users:
+            unique_users[user.phone_num].num_submissions += 1
+        else:
+            unique_users[user.phone_num] = user
+
+    return unique_users.values()
+
+
+if __name__ == '__main__':
+    get_form_responses()
