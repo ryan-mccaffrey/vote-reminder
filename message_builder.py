@@ -32,13 +32,13 @@ def get_receipt_msg(start, user_texts, event_text_dict):
     text = t.render(data)
     return text
 
-if __name__ == '__main__':
+# if __name__ == '__main__':
     # event text
     # info = get_test_election_info()
     # user = get_test_user()
     # text = get_event_msg(MessageEvent.GENERAL_DEADLINE, user, info, TimeWarning.WEEK)
 
     # cron receipt
-    start = datetime.now()
-    text = get_receipt_msg(start, 12, {"sample thing": 2, "sample three": 3})
-    print(text)
+    # start = datetime.now()
+    # text = get_receipt_msg(start, 12, {"sample thing": 2, "sample three": 3})
+    # print(text)

@@ -7,6 +7,8 @@ import logging
 import os
 import pickle
 
+logger = logging.getLogger(__name__)
+
 # Form response columns
 FORM_TIME_IDX = 0
 FORM_NAME_IDX = 1
@@ -58,9 +60,9 @@ def get_form_responses():
     # created automatically when the authorization flow completes for the first
     # time.
     creds = get_google_creds()
-    logging.info('Got google credentials...')
+    logger.info('Got google credentials...')
     assert creds and creds.valid
-    logging.info('... and they are valid')
+    logger.info('... and they are valid')
     service = build('sheets', 'v4', credentials=creds)
 
     # Call the Sheets API
@@ -78,7 +80,7 @@ def get_form_responses():
         user = FormSubmission(time, name, phone, state)
 
         if not phonenumbers.is_valid_number(user.phone_num):
-            logging.warning('user {} has invalid phone number {}'.format(user.name, user.phone_num))
+            logger.warning('user {} has invalid phone number {}'.format(user.name, user.phone_num))
             continue
 
         # res is stored in time submitted order, so we just keep the first submission.
@@ -89,10 +91,10 @@ def get_form_responses():
         else:
             unique_users[phone_str] = user
 
-    logging.info('Collected {} unique users'.format(len(unique_users)))
+    logger.info('Collected {} unique users'.format(len(unique_users)))
     return unique_users.values()
 
 
-if __name__ == '__main__':
-    get_form_responses()
+# if __name__ == '__main__':
+#     get_form_responses()
     # get_google_creds()

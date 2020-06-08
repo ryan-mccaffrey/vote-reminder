@@ -11,6 +11,8 @@ import pickle
 import logging
 import os
 
+logger = logging.getLogger(__name__)
+
 class TextManager:
     def __init__(self, now, is_test=False):
         load_dotenv()
@@ -32,15 +34,15 @@ class TextManager:
         self.admin_numbers = [admin_num]
         msg = 'Vote reminder cron: starting run at {}'.format(now)
         self.send_text(admin_num, msg)
-        logging.info('Initialized text manager, admin_numbers: {}'.format(self.admin_numbers))
+        logger.info('Initialized text manager, admin_numbers: {}'.format(self.admin_numbers))
 
     def send_all_event_texts(self, now, users, events):
-        logging.info('Sending text messages for all events...')
+        logger.info('Sending text messages for all events...')
         num_new_user_texts = self.send_new_user_texts(now, users)
         event_map = self.send_event_texts(users, events)
 
         # generate receipt to send to myself
-        logging.info('Sending text receipt to admins...')
+        logger.info('Sending text receipt to admins...')
         msg = get_receipt_msg(now, num_new_user_texts, event_map)
         for admin in self.admin_numbers:
             self.send_text(admin, msg)
@@ -97,10 +99,10 @@ class TextManager:
         try:
             message = self.client.messages.create(to=to_str, 
                 from_=self.from_number, body=msg_body)
-            logging.info('sent text to {}: {}'.format(to_str, message.sid))
+            logger.info('sent text to {}: {}'.format(to_str, message.sid))
         except Exception as e:
             print('Could not send text to {}: {}'.format(to_str, e))
-            logging.warning('Could not send text to {}: {}'.format(to_str, e))
+            logger.warning('Could not send text to {}: {}'.format(to_str, e))
 
 def main():
     run_time = datetime.now()
@@ -110,6 +112,3 @@ def main():
     text = get_event_msg(MessageEvent.NEW_USER, user, info)
 
     manager.send_text('631-707-5422', text)
-
-if __name__ == '__main__':
-    main()

@@ -48,6 +48,3 @@ def test_get_events():
         actual_event, actual_warning, _ = events[0]
         assert actual_event == event
         assert actual_warning == warning
-
-if __name__ == '__main__':
-    test_get_events()
