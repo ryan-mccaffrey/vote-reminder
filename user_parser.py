@@ -64,7 +64,7 @@ def get_form_responses():
     assert creds and creds.valid
     logger.info('... and they are valid')
     # TODO: make cache discovery True if this ever evolves past a cron
-    service = build('sheets', 'v4', credentials=creds, cache_discovery=False)
+    service = build('sheets', 'v4', credentials=creds)
 
     # Call the Sheets API
     sheet = service.spreadsheets()

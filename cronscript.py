@@ -2,14 +2,14 @@ from user_parser import get_form_responses, get_test_user
 from election_parser import parse_elections_csv, get_all_election_events
 from texter import TextManager
 from datetime import datetime
+import logging
 
 # TODO:
 # - better error handling around not being able to send texts
 
 def main():
-    import logging.config
     run_time = datetime.now()
-    logging.config.fileConfig('logs/cronscript_{}.log'.format(run_time.strftime('%Y%m%d_%H%M%S')))
+    logging.basicConfig(filename='logs/cronscript_{}.log'.format(run_time.strftime('%Y%m%d_%H%M%S')), level=logging.DEBUG)
 
     texter = TextManager(run_time)
     users = get_form_responses()
