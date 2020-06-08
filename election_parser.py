@@ -1,5 +1,6 @@
 from datetime import datetime, timedelta
 from enum import Enum
+import logging
 import csv
 import os
 
@@ -125,6 +126,7 @@ def get_all_election_events(election_infos, today):
     events = []
     for info in election_infos:
         events = events + info.get_events_to_send(today)
+    logging.info('Computed election events: {}'.format(events))
     return events
 
 def get_test_election_info(state_code='NJ'):
@@ -162,6 +164,7 @@ def parse_elections_csv():
             global_election_info_state_map[info.state_code] = info
             election_infos.append(info)
     
+    logging.info('Finished parsing election info')
     return election_infos
 
 if __name__ == '__main__':

@@ -141,3 +141,4 @@ cython_debug/
 .DS_Store
 google_token.pickle
 credentials.json
+logs

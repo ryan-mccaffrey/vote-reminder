@@ -6,6 +6,7 @@ from twilio.rest import Client
 from dotenv import load_dotenv
 from datetime import datetime
 from collections import defaultdict
+import logging
 import os
 
 class TextManager:
@@ -21,12 +22,15 @@ class TextManager:
         self.admin_numbers = [os.getenv('RYAN_PHONE_NUMBER')]
         msg = 'Vote reminder cron: starting run at {}'.format(now)
         self.send_text(os.getenv('RYAN_PHONE_NUMBER'), msg)
+        logging.info('Initialized text manager, admin_numbers: {}'.format(self.admin_numbers))
 
     def send_all_event_texts(self, now, users, events):
+        logging.info('Sending text messages for all events...')
         num_new_user_texts = self.send_new_user_texts(now, users)
         event_map = self.send_event_texts(users, events)
 
         # generate receipt to send to myself
+        logging.info('Sending text receipt to admins...')
         msg = get_receipt_msg(now, num_new_user_texts, event_map)
         for admin in self.admin_numbers:
             self.send_text(admin, msg)
