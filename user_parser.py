@@ -19,7 +19,11 @@ FORM_STATE_IDX = 3
 SCOPES = ['https://www.googleapis.com/auth/spreadsheets.readonly']
 
 # The ID and range of a sample spreadsheet.
+# REAL sheet
 FORM_RESPONSE_SHEET_ID = '1ve9JZdtaxLmJD797reJG02G65loeeHsUuX7thMBZmXA'
+# TEST sheet
+# FORM_RESPONSE_SHEET_ID = '1dFA2K3lOk0ZxGSUNpzfka0jZJECAcN4x_0hx4xmQUZU'
+
 FORM_RESPONSE_RANGE = 'Form_Responses!A2:E'
 
 class FormSubmission:
@@ -29,6 +33,23 @@ class FormSubmission:
         self.phone_num = phonenumbers.parse(phone_str, 'US')
         self.state_code = state
         self.num_submissions = 1
+        self.is_new = True
+
+    def __str__(self):
+        return '{} (State: {}, Phone: {} -- new = {})'.format(self.name, self.state_code, 
+            phonenumbers.format_number(self.phone_num, phonenumbers.PhoneNumberFormat.E164), self.is_new)
+
+    def __eq__(self, other):
+        if not isinstance(other, FormSubmission):
+            return False
+        return self.phone_num == other.phone_num and self.state_code == other.state_code
+
+    # kind of a hash
+    def get_set_key(self):
+        return '{}_{}'.format(phonenumbers.format_number(self.phone_num, phonenumbers.PhoneNumberFormat.E164), self.state_code)
+
+    def set_phone_num(self, num):
+        self.phone_num = phonenumbers.parse(num, 'US')
 
 def get_test_user():
     return FormSubmission('6/6/2020 21:29:28', 'Ryan', '631-707-5422', 'CA')
@@ -37,8 +58,8 @@ def get_test_user():
 def get_google_creds():
     creds = None
     # Check first if access and refresh tokens already exist
-    if os.path.exists('google_token.pickle'):
-        with open('google_token.pickle', 'rb') as token:
+    if os.path.exists('cache/google_token.pickle'):
+        with open('cache/google_token.pickle', 'rb') as token:
             creds = pickle.load(token)
     
     # If there are no (valid) credentials available, let the user log in.
@@ -51,11 +72,54 @@ def get_google_creds():
                 'credentials.json', SCOPES)
             creds = flow.run_local_server(port=0)
         # Save the credentials for the next run
-        with open('google_token.pickle', 'wb') as token:
+        with open('cache/google_token.pickle', 'wb') as token:
             pickle.dump(creds, token)
     return creds
 
-def get_form_responses():
+def get_new_users():
+    form_users = _get_form_responses()
+
+    if not os.path.exists('cache/users.pickle'):
+        return form_users.values()
+
+    with open('cache/users.pickle', 'rb') as f:
+        existing_users = pickle.load(f)
+
+    new_users = {}
+    for user_key, user in form_users.items():
+        if user_key not in existing_users:
+            new_users[user_key] = user
+
+    for user_key, user in existing_users.items():
+        if user.is_new:
+            new_users[user_key] = user
+
+    return new_users.values()
+
+def get_all_users():
+    form_users = _get_form_responses()    
+
+    if not os.path.exists('cache/users.pickle'):
+        return form_users.values()
+
+    with open('cache/users.pickle', 'rb') as f:
+        existing_users = pickle.load(f)
+
+    for user_key, user in form_users.items():
+        if user_key not in existing_users:
+            existing_users[user_key] = user
+
+    return existing_users.values()
+
+def save_users(users):
+    user_map = {}
+    for user in users:
+        user_map[user.get_set_key()] = user
+
+    with open('cache/users.pickle', 'wb') as f:
+        pickle.dump(user_map, f)
+
+def _get_form_responses():
     # The file token.pickle stores the user's access and refresh tokens, and is
     # created automatically when the authorization flow completes for the first
     # time.
@@ -71,7 +135,7 @@ def get_form_responses():
     result = sheet.values().get(spreadsheetId=FORM_RESPONSE_SHEET_ID,
                                 range=FORM_RESPONSE_RANGE).execute()
 
-    unique_users = {}
+    users = {}
     res = result.get('values', [])
     for submission in res: 
         if len(submission) == 0:
@@ -84,16 +148,14 @@ def get_form_responses():
             logger.warning('user {} has invalid phone number {}'.format(user.name, user.phone_num))
             continue
 
-        # res is stored in time submitted order, so we just keep the first submission.
-        # dedup by phone number
-        phone_str = phonenumbers.format_number(user.phone_num, phonenumbers.PhoneNumberFormat.E164)
-        if phone_str in unique_users:
-            unique_users[phone_str].num_submissions += 1
+        # de-duplicate the form responses.
+        if user.get_set_key() in users:
+            logger.info('Found duplicate user {} while parsing form'.format(user))
         else:
-            unique_users[phone_str] = user
+            users[user.get_set_key()] = user
 
-    logger.info('Collected {} unique users'.format(len(unique_users)))
-    return unique_users.values()
+    logger.info('Collected {} unique users from google form'.format(len(users)))
+    return users
 
 
 # if __name__ == '__main__':

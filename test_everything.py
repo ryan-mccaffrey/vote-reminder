@@ -1,6 +1,8 @@
 from election_parser import get_warning_event, get_test_election_info, MessageEvent, TimeWarning
+from user_parser import FormSubmission
 from datetime import datetime
 import pytest
+import pickle
 import os
 import time
 
@@ -48,3 +50,26 @@ def test_get_events():
         actual_event, actual_warning, _ = events[0]
         assert actual_event == event
         assert actual_warning == warning
+
+def test_user_equality():
+    user1 = FormSubmission('02/26/2020 12:46:33', 'Ryan', '6317075422', 'CA')
+    user2 = FormSubmission('02/28/2020 12:46:32', 'Jeff', '16317075422', 'NY')
+    assert user1 != user2
+
+    user2.state_code = 'CA'
+    assert user1 == user2
+
+    user1.set_phone_num('631-707-5422')
+    assert user1 == user2
+
+    user3 = FormSubmission('01/22/2020 14:12:01', 'Susan', '6318952121', 'WY')
+    user_list = [user2, user3]
+    assert user1 in user_list
+
+def cache_analysis():
+    with open('cache/users.pickle', 'rb') as f:
+        users = pickle.load(f)
+    # print(users)
+    print([str(user) for user in users.values()])
+
+cache_analysis()

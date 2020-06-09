@@ -39,6 +39,12 @@ global_election_info_state_map = None
 
 def get_election_info_state_map():
     global global_election_info_state_map
+
+    if global_election_info_state_map is not None:
+        return global_election_info_state_map
+
+    parse_elections_csv()
+    assert global_election_info_state_map is not None
     return global_election_info_state_map
 
 class StateElectionInfo:
@@ -65,6 +71,9 @@ class StateElectionInfo:
             self.register_day_of = True
         
         self.register_online_flag = vals[ONLINE_REGISTRATION_FLAG_IDX].lower() == 'yes'
+
+    def __str__(self):
+        return '{} (Primary: {})'.format(self.state, self.primary_date.strftime('%Y-%m-%d'))
 
     # Get all of the text message events to send for this state election info object.
     def get_events_to_send(self, today):
